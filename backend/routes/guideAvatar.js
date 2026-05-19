@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const User = require('../models/User');
 const { verifyToken, authorizeRoles } = require('../middleware/auth');
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require('../utils/cloudinaryUpload');
 
 const router = express.Router();
 
@@ -21,13 +22,29 @@ const upload = multer({ storage });
 
 // Avatar upload endpoint for guides
 router.post('/avatar', verifyToken, authorizeRoles('guide'), upload.single('avatar'), async (req, res) => {
+  let uploaded = null;
+
   try {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    uploaded = await uploadAndCleanupLocalFile(req.file.path, {
+      folder: `travel2/avatars/guides/${req.user.userId}`,
+      resource_type: 'image'
+    });
+    const avatarUrl = uploaded.secure_url;
     // Update avatar in User collection
-    await User.findByIdAndUpdate(req.user.userId, { avatar: avatarUrl });
+    const user = await User.findByIdAndUpdate(req.user.userId, { avatar: avatarUrl });
+    if (!user) {
+      if (uploaded?.public_id) {
+        await destroyAsset(uploaded.public_id, { resource_type: 'image' }).catch(() => {});
+      }
+      return res.status(404).json({ message: 'Guide not found' });
+    }
     res.json({ avatar: avatarUrl });
   } catch (err) {
+    await safeRemoveLocalFile(req.file?.path);
+    if (uploaded?.public_id) {
+      await destroyAsset(uploaded.public_id, { resource_type: 'image' }).catch(() => {});
+    }
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });

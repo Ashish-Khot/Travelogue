@@ -77,6 +77,16 @@ const GuideSchema = new mongoose.Schema({
       required: true,
       trim: true
     },
+    publicId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    resourceType: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     caption: {
       type: String,
       trim: true,

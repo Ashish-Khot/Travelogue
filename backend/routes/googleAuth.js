@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Google OAuth Login Route
 router.post('/google-login', async (req, res) => {
@@ -20,9 +21,12 @@ router.post('/google-login', async (req, res) => {
       });
       await user.save();
     }
+    if (!JWT_SECRET) {
+      return res.status(500).json({ message: 'Server misconfigured: JWT_SECRET is missing' });
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role },
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
     res.json({

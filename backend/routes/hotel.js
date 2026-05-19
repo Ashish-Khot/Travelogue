@@ -6,6 +6,7 @@ const User = require("../models/User");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require("../utils/cloudinaryUpload");
 
 const HOTEL_IMAGE_UPLOAD_DIR = path.join(__dirname, "../uploads/hotelImages");
 const HOTEL_LICENSE_UPLOAD_DIR = path.join(__dirname, "../uploads/hotelLicenses");
@@ -189,22 +190,35 @@ router.put("/profile/:userId", verifyToken, async (req, res) => {
 
 // Upload business license / hotel registration proof
 router.post("/license/upload/:userId", verifyToken, handleLicenseUpload, async (req, res) => {
+  let uploaded = null;
+
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    const proofUrl = `/uploads/hotelLicenses/${req.file.filename}`;
+    uploaded = await uploadAndCleanupLocalFile(req.file.path, {
+      folder: `travel2/hotels/${req.params.userId}/licenses`,
+      resource_type: "auto"
+    });
+    const proofUrl = uploaded.secure_url;
     const hotel = await Hotel.findOneAndUpdate(
       { user: req.params.userId },
       { $set: { businessLicenseProof: proofUrl, updatedAt: Date.now() } },
       { new: true }
     );
     if (!hotel) {
-      fs.promises.unlink(req.file.path).catch(() => {});
+      if (uploaded?.public_id) {
+        await destroyAsset(uploaded.public_id, {
+          resource_type: uploaded.resource_type || "raw"
+        }).catch(() => {});
+      }
       return res.status(404).json({ error: "Hotel not found" });
     }
     res.json({ hotel, businessLicenseProof: proofUrl });
   } catch (err) {
-    if (req.file?.path) {
-      fs.promises.unlink(req.file.path).catch(() => {});
+    await safeRemoveLocalFile(req.file?.path);
+    if (uploaded?.public_id) {
+      await destroyAsset(uploaded.public_id, {
+        resource_type: uploaded.resource_type || "raw"
+      }).catch(() => {});
     }
     res.status(500).json({ error: err.message });
   }
@@ -228,9 +242,15 @@ router.post("/images/url/:userId", verifyToken, async (req, res) => {
 
 // Upload image file
 router.post("/images/upload/:userId", verifyToken, upload.single('image'), async (req, res) => {
+  let uploaded = null;
+
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const imageUrl = `/uploads/hotelImages/${req.file.filename}`;
+    uploaded = await uploadAndCleanupLocalFile(req.file.path, {
+      folder: `travel2/hotels/${req.params.userId}/images`,
+      resource_type: "auto"
+    });
+    const imageUrl = uploaded.secure_url;
     const hotel = await Hotel.findOneAndUpdate(
       { user: req.params.userId },
       { $push: { images: imageUrl }, $set: { updatedAt: Date.now() } },
@@ -238,6 +258,12 @@ router.post("/images/upload/:userId", verifyToken, upload.single('image'), async
     );
     res.json(hotel.images);
   } catch (err) {
+    await safeRemoveLocalFile(req.file?.path);
+    if (uploaded?.public_id) {
+      await destroyAsset(uploaded.public_id, {
+        resource_type: uploaded.resource_type || "image"
+      }).catch(() => {});
+    }
     res.status(500).json({ error: err.message });
   }
 });

@@ -3,13 +3,46 @@ const express = require('express');
 const Travelogue = require('../models/Travelogue');
 const { verifyToken } = require('../middleware/auth');
 const upload = require('../middleware/uploadTravelogueMedia');
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require('../utils/cloudinaryUpload');
 
 const router = express.Router();
+
+async function uploadTravelogueFiles(files = [], userId) {
+  const uploadedAssets = [];
+
+  for (const file of files) {
+    const result = await uploadAndCleanupLocalFile(file.path, {
+      folder: `travel2/travelogues/${userId}`,
+      resource_type: 'auto'
+    });
+    uploadedAssets.push(result);
+  }
+
+  return uploadedAssets;
+}
+
+async function cleanupLocalFiles(files = []) {
+  await Promise.all(files.map((file) => safeRemoveLocalFile(file?.path)));
+}
+
+async function cleanupUploadedAssets(assets = []) {
+  await Promise.all(
+    assets
+      .filter((asset) => asset?.public_id)
+      .map((asset) =>
+        destroyAsset(asset.public_id, {
+          resource_type: asset.resource_type || 'image'
+        }).catch(() => {})
+      )
+  );
+}
 
 // ===== CREATE / SUBMIT =====
 
 // Create new travelogue (with full details)
 router.post('/create', verifyToken, upload.array('media', 10), async (req, res) => {
+  let uploadedAssets = [];
+
   try {
     const {
       title, description, destination, location, rating, tags,
@@ -17,8 +50,9 @@ router.post('/create', verifyToken, upload.array('media', 10), async (req, res) 
       difficulty, season, highlights
     } = req.body;
 
-    const images = req.files ? req.files.map(f => f.path.replace('\\', '/')) : [];
     const userId = req.user.userId;
+    uploadedAssets = req.files?.length ? await uploadTravelogueFiles(req.files, userId) : [];
+    const images = uploadedAssets.map((asset) => asset.secure_url);
 
     let parsedTags = tags || [];
     if (typeof parsedTags === 'string') parsedTags = parsedTags.split(',').map(t => t.trim());
@@ -56,12 +90,16 @@ router.post('/create', verifyToken, upload.array('media', 10), async (req, res) 
       travelogue: populated 
     });
   } catch (err) {
+    await cleanupUploadedAssets(uploadedAssets);
+    await cleanupLocalFiles(req.files);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
 // Save as draft
 router.post('/draft', verifyToken, upload.array('media', 10), async (req, res) => {
+  let uploadedAssets = [];
+
   try {
     const { _id, ...data } = req.body;
     const userId = req.user.userId;
@@ -76,7 +114,8 @@ router.post('/draft', verifyToken, upload.array('media', 10), async (req, res) =
       return res.json({ message: 'Draft saved!', travelogue });
     } else {
       // Create new draft
-      const images = req.files ? req.files.map(f => f.path.replace('\\', '/')) : [];
+      uploadedAssets = req.files?.length ? await uploadTravelogueFiles(req.files, userId) : [];
+      const images = uploadedAssets.map((asset) => asset.secure_url);
       const travelogue = new Travelogue({
         ...data,
         images,
@@ -88,6 +127,8 @@ router.post('/draft', verifyToken, upload.array('media', 10), async (req, res) =
       res.status(201).json({ message: 'Draft created!', travelogue: populated });
     }
   } catch (err) {
+    await cleanupUploadedAssets(uploadedAssets);
+    await cleanupLocalFiles(req.files);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
@@ -193,6 +234,8 @@ router.get('/user/:userId', async (req, res) => {
 
 // Update travelogue
 router.put('/:id', verifyToken, upload.array('media', 10), async (req, res) => {
+  let uploadedAssets = [];
+
   try {
     const travelogue = await Travelogue.findById(req.params.id);
     if (!travelogue) return res.status(404).json({ message: 'Travelogue not found' });
@@ -203,7 +246,8 @@ router.put('/:id', verifyToken, upload.array('media', 10), async (req, res) => {
 
     // Add new images if provided
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(f => f.path.replace('\\', '/'));
+      uploadedAssets = await uploadTravelogueFiles(req.files, req.user.userId);
+      const newImages = uploadedAssets.map((asset) => asset.secure_url);
       travelogue.images = [...travelogue.images, ...newImages];
     }
 
@@ -214,6 +258,8 @@ router.put('/:id', verifyToken, upload.array('media', 10), async (req, res) => {
 
     res.json({ message: 'Updated successfully!', travelogue: updated });
   } catch (err) {
+    await cleanupUploadedAssets(uploadedAssets);
+    await cleanupLocalFiles(req.files);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });

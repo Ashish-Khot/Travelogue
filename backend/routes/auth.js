@@ -7,8 +7,10 @@ const path = require("path");
 const User = require("../models/User");
 const Guide = require("../models/Guide");
 const { verifyToken } = require("../middleware/auth");
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require("../utils/cloudinaryUpload");
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_REGEX = /^\d{10}$/;
 const PASSWORD_MIN_LENGTH = 6;
@@ -113,6 +115,8 @@ function handleIdentityProofUpload(req, res, next) {
 
 // =================== REGISTER ===================
 router.post("/register", handleIdentityProofUpload, async (req, res) => {
+  let uploadedIdentityProof = null;
+
   try {
     const {
       name,
@@ -195,6 +199,13 @@ router.post("/register", handleIdentityProofUpload, async (req, res) => {
       return fail(400, "Email already exists");
     }
 
+    if (req.file) {
+      uploadedIdentityProof = await uploadAndCleanupLocalFile(req.file.path, {
+        folder: "travel2/guides/identity-proofs",
+        resource_type: "auto"
+      });
+    }
+
     const sanitizedInterests = normalizedRole === "tourist"
       ? String(interests || "").trim()
       : "";
@@ -244,7 +255,7 @@ router.post("/register", handleIdentityProofUpload, async (req, res) => {
         bio: String(req.body.bio || '').trim(),
         experienceYears: experienceYearsNumber,
         languages: normalizedLanguages,
-        identityProof: `/uploads/identity-proofs/${req.file.filename}`,
+        identityProof: uploadedIdentityProof?.secure_url || "",
         phone: user.phone,
         currency: 'INR',
         approved: false
@@ -264,7 +275,12 @@ router.post("/register", handleIdentityProofUpload, async (req, res) => {
     });
 
   } catch (err) {
-    removeUploadedFile(req.file);
+    await safeRemoveLocalFile(req.file?.path);
+    if (uploadedIdentityProof?.public_id) {
+      await destroyAsset(uploadedIdentityProof.public_id, {
+        resource_type: uploadedIdentityProof.resource_type || "raw"
+      }).catch(() => {});
+    }
     console.error("REGISTER ERROR:", err);
     if (err?.name === "ValidationError" || err?.name === "CastError") {
       return res.status(400).json({ message: "Invalid registration data", error: err.message });
@@ -321,9 +337,12 @@ router.post('/login', async (req, res) => {
       }
     }
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!JWT_SECRET) {
+      return res.status(500).json({ message: 'Server misconfigured: JWT_SECRET is missing' });
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role },
-      process.env.JWT_SECRET || 'your_jwt_secret',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
     res.json({

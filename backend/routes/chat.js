@@ -11,6 +11,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { verifyToken } = require('../middleware/auth');
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require('../utils/cloudinaryUpload');
 const router = express.Router();
 
 /* =========================================================
@@ -108,11 +109,17 @@ const upload = multer({
 });
 
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
+    let uploaded = null;
+
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        const fileUrl = `/uploads/chat/${req.file.filename}`;
+        uploaded = await uploadAndCleanupLocalFile(req.file.path, {
+            folder: `travel2/chat/${req.user.userId}`,
+            resource_type: 'auto'
+        });
+        const fileUrl = uploaded.secure_url;
         res.json({
             url: fileUrl,
             name: req.file.originalname,
@@ -120,6 +127,12 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
             size: req.file.size
         });
     } catch (err) {
+        await safeRemoveLocalFile(req.file?.path);
+        if (uploaded?.public_id) {
+            await destroyAsset(uploaded.public_id, {
+                resource_type: uploaded.resource_type || 'raw'
+            }).catch(() => {});
+        }
         res.status(500).json({ error: 'Upload failed' });
     }
 });

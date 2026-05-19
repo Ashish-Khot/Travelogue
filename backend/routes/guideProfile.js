@@ -5,6 +5,7 @@ const { verifyToken, authorizeRoles } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { uploadAndCleanupLocalFile, safeRemoveLocalFile, destroyAsset } = require('../utils/cloudinaryUpload');
 
 const router = express.Router();
 
@@ -46,6 +47,10 @@ const runGuideMediaUpload = (req, res, next) => {
     res.status(400).json({ message: err.message || 'Media upload failed' });
   });
 };
+
+async function cleanupLocalFiles(files = []) {
+  await Promise.all(files.map((file) => safeRemoveLocalFile(file?.path)));
+}
 
 function toGuidePayload(guide) {
   const payload = guide.toObject();
@@ -184,6 +189,8 @@ router.put('/', verifyToken, authorizeRoles('guide'), async (req, res) => {
 
 // Upload completed-tour photos/videos for guide profile
 router.post('/media', verifyToken, authorizeRoles('guide'), runGuideMediaUpload, async (req, res) => {
+  const uploadedAssets = [];
+
   try {
     const guide = await Guide.findOne({ userId: req.user.userId });
     if (!guide) return res.status(404).json({ message: 'Guide profile not found' });
@@ -191,12 +198,22 @@ router.post('/media', verifyToken, authorizeRoles('guide'), runGuideMediaUpload,
       return res.status(400).json({ message: 'Please upload at least one image or video file.' });
     }
 
-    const newMedia = req.files.map((file) => ({
-      mediaType: file.mimetype.startsWith('video/') ? 'video' : 'image',
-      url: `/uploads/guide-media/${file.filename}`,
-      caption: '',
-      uploadedAt: new Date()
-    }));
+    const newMedia = [];
+    for (const file of req.files) {
+      const uploaded = await uploadAndCleanupLocalFile(file.path, {
+        folder: `travel2/guides/${req.user.userId}/tour-media`,
+        resource_type: 'auto'
+      });
+      uploadedAssets.push(uploaded);
+      newMedia.push({
+        mediaType: file.mimetype.startsWith('video/') ? 'video' : 'image',
+        url: uploaded.secure_url,
+        publicId: uploaded.public_id,
+        resourceType: uploaded.resource_type,
+        caption: '',
+        uploadedAt: new Date()
+      });
+    }
 
     const currentMedia = Array.isArray(guide.tourMedia) ? guide.tourMedia : [];
     guide.tourMedia = [...currentMedia, ...newMedia];
@@ -211,6 +228,16 @@ router.post('/media', verifyToken, authorizeRoles('guide'), runGuideMediaUpload,
     const payload = toGuidePayload(guide);
     res.json({ message: 'Media uploaded successfully.', guide: payload, user: payload.userId });
   } catch (err) {
+    await cleanupLocalFiles(req.files);
+    await Promise.all(
+      uploadedAssets
+        .filter((asset) => asset?.public_id)
+        .map((asset) =>
+          destroyAsset(asset.public_id, {
+            resource_type: asset.resource_type || 'image'
+          }).catch(() => {})
+        )
+    );
     console.error('Error uploading guide media:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -236,6 +263,12 @@ router.delete('/media/:mediaId', verifyToken, authorizeRoles('guide'), async (re
     }
 
     await guide.save();
+
+    if (mediaToRemove.publicId) {
+      await destroyAsset(mediaToRemove.publicId, {
+        resource_type: mediaToRemove.resourceType || (mediaToRemove.mediaType === 'video' ? 'video' : 'image')
+      }).catch(() => {});
+    }
 
     if (removeUrl.startsWith('/uploads/guide-media/')) {
       const filename = path.basename(removeUrl);
