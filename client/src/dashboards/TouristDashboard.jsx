@@ -262,7 +262,7 @@ function TouristDashboard() {
     { label: 'My Bookings', value: 'My Bookings' },
     { label: 'Chat', value: 'Chat' },
     { label: 'Reviews', value: 'Reviews' },
-    { label: 'Travelogue', value: 'Travelogue' },
+    { label: 'Story Sharing', value: 'Travelogue' },
     { label: 'Travel Tips', value: 'Travel Tips' },
     { label: 'Emergency', value: 'Emergency' },
   ];

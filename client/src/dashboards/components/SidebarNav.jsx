@@ -49,6 +49,7 @@ const iconMap = {
   Chat: <ChatIcon sx={{ color: 'primary.main' }} />,
   Reviews: <ReviewsIcon sx={{ color: 'primary.main' }} />,
   'Travel Tips': <TipsIcon sx={{ color: 'primary.main' }} />,
+  'Story Sharing': <MenuBookIcon sx={{ color: 'primary.main' }} />,
   Travelogue: <MenuBookIcon sx={{ color: 'primary.main' }} />,
   Emergency: <EmergencyIcon sx={{ color: 'error.main' }} />,
 };

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 
@@ -38,98 +38,17 @@ const FEATURES = [
   },
 ];
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api').replace(/\/$/, '');
-
-const normalizeSearchResult = (feature, index) => {
-  const properties = feature?.properties || {};
-  const coordinates = feature?.geometry?.coordinates || [];
-  const kinds = properties.kinds || properties.category || '';
-  const shortKinds = kinds
-    ? kinds
-        .split(',')
-        .map((item) => item.replace(/_/g, ' ').trim())
-        .filter(Boolean)
-        .slice(0, 2)
-        .join(' / ')
-    : 'Explore destination';
-
-  return {
-    title: properties.name || `Destination ${index + 1}`,
-    location: [properties.address?.city, properties.address?.country].filter(Boolean).join(', ') || shortKinds,
-    price: shortKinds,
-    description: properties.description || 'Explore attractions, local guides, and trip ideas for this destination.',
-    image: properties.image,
-    lat: coordinates[1],
-    lon: coordinates[0],
-  };
-};
-
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [searchedQuery, setSearchedQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState('');
   const fallbackImage =
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
-  const visibleDestinations = searchedQuery ? searchResults : DESTINATIONS;
+  const visibleDestinations = DESTINATIONS;
 
   const scrollToSection = (id) => {
     const node = document.getElementById(id);
     if (node) {
       node.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
-
-  const handleHeroSearch = async (event) => {
-    event.preventDefault();
-    const destination = query.trim();
-
-    if (!destination) {
-      setSearchedQuery('');
-      setSearchResults([]);
-      setSearchError('');
-      scrollToSection('destinations');
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchError('');
-    setSearchedQuery(destination);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/opentripmap/search?query=${encodeURIComponent(destination)}&limit=9`
-      );
-
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-
-      const data = await response.json();
-      const results = (data.features || []).map(normalizeSearchResult);
-
-      setSearchResults(results);
-      if (results.length === 0) {
-        setSearchError(`No destinations found for "${destination}".`);
-      }
-      scrollToSection('destinations');
-    } catch (error) {
-      console.error('Destination search failed:', error);
-      setSearchResults([]);
-      setSearchError('Could not search destinations right now. Please check that the backend is running.');
-      scrollToSection('destinations');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const clearSearch = () => {
-    setQuery('');
-    setSearchedQuery('');
-    setSearchResults([]);
-    setSearchError('');
   };
 
   return (
@@ -158,32 +77,13 @@ export default function LandingPage() {
           <p>
             Explore breathtaking destinations, connect with expert guides, and create unforgettable memories.
           </p>
-          <form className="lp-search" onSubmit={handleHeroSearch}>
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search destinations..."
-            />
-            <button type="submit" disabled={isSearching}>{isSearching ? 'Searching...' : 'Search'}</button>
-          </form>
         </div>
       </section>
 
       <section id="destinations" className="lp-section lp-destinations">
         <div className="lp-heading">
-          <h2>{searchedQuery ? `Search Results for ${searchedQuery}` : 'Featured Destinations'}</h2>
-          <p>
-            {searchedQuery
-              ? `${searchResults.length} destination${searchResults.length === 1 ? '' : 's'} found`
-              : 'Handpicked locations for your next journey'}
-          </p>
-          {searchedQuery && (
-            <button type="button" className="lp-clear-search" onClick={clearSearch}>
-              Show featured destinations
-            </button>
-          )}
-          {searchError && <p className="lp-search-status">{searchError}</p>}
+          <h2>Featured Destinations</h2>
+          <p>Handpicked locations for your next journey</p>
         </div>
         <div className="lp-cards">
           {visibleDestinations.map((item) => (
@@ -239,5 +139,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 
