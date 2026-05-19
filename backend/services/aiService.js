@@ -225,12 +225,13 @@ class AIService {
       requestBody.response_format = { type: 'json_object' };
     }
 
+    const openRouterReferer = (process.env.APP_PUBLIC_URL || process.env.FRONTEND_PUBLIC_URL || '').trim();
     const requestConfig = {
       timeout: Math.max(API_CONFIG.DEFAULTS.REQUEST_TIMEOUT, 18000),
       headers: {
         Authorization: `Bearer ${this.openRouterKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.APP_PUBLIC_URL || 'http://localhost:5173',
+        ...(openRouterReferer ? { 'HTTP-Referer': openRouterReferer } : {}),
         'X-Title': process.env.APP_NAME || 'Travel Platform',
       },
     };
@@ -396,7 +397,9 @@ class AIService {
             headers: {
               Authorization: `Bearer ${this.openRouterKey}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'http://localhost:3001',
+              ...((process.env.APP_PUBLIC_URL || process.env.FRONTEND_PUBLIC_URL || '').trim()
+                ? { 'HTTP-Referer': (process.env.APP_PUBLIC_URL || process.env.FRONTEND_PUBLIC_URL || '').trim() }
+                : {}),
               'X-Title': 'travel-itinerary-planner',
             },
             timeout: Math.max(API_CONFIG.DEFAULTS.REQUEST_TIMEOUT, 75000),

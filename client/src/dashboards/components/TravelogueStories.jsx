@@ -580,11 +580,9 @@ export default function TravelogueStories() {
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Avatar
                     src={
-                      activeStory.userId?.avatar?.startsWith('http')
-                        ? activeStory.userId.avatar
-                        : activeStory.userId?.avatar
-                          ? `http://localhost:3001${activeStory.userId.avatar}`
-                          : '/default-avatar.png'
+                      activeStory.userId?.avatar
+                        ? buildImageUrl(activeStory.userId.avatar)
+                        : '/default-avatar.png'
                     }
                     sx={{ width: 36, height: 36, border: '2px solid #fff' }}
                   />

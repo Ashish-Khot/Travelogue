@@ -22,8 +22,9 @@ import io from 'socket.io-client';
 import api from '../../api';
 import PremiumAvatar from '../../components/PremiumAvatar';
 import { buildMediaUrl } from '../../utils/media';
+import { SOCKET_BASE_URL } from '../../config/runtime';
 
-const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = SOCKET_BASE_URL;
 const DELETE_WINDOW_MS = 60 * 60 * 1000;
 const emojiList = [
   '\u{1F600}',

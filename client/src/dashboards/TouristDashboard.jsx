@@ -7,6 +7,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { ThemeProvider } from '@mui/material/styles';
 import { io } from 'socket.io-client';
 import theme from '../theme';
+import { SOCKET_BASE_URL } from '../config/runtime';
 import AppBarTop from './components/AppBarTop';
 import SidebarNav from './components/SidebarNav';
 
@@ -66,7 +67,7 @@ function TouristDashboard() {
   // Initialize Socket.io connection and listen for incoming chat messages
   useEffect(() => {
     if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3001', {
+      socketRef.current = io(SOCKET_BASE_URL, {
         query: {
           userId: user._id || user.userId,
           userType: 'tourist'

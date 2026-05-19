@@ -10,6 +10,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import API from '../../api';
+import { buildImageUrl } from '../../utils/imageHelper';
 
 const statusColors = {
   approved: { bg: 'rgba(16, 185, 129, 0.1)', text: '#10b981', label: 'Approved' },
@@ -224,9 +225,7 @@ export default function MyTravelogues() {
               {filteredTravelogues.map(travelogue => {
                 const statusInfo = statusColors[travelogue.status];
                 const thumbnailUrl = travelogue.images && travelogue.images[0]
-                  ? (travelogue.images[0].startsWith('http')
-                    ? travelogue.images[0]
-                    : `http://localhost:3001${travelogue.images[0]}`)
+                  ? buildImageUrl(travelogue.images[0])
                   : '/no-image.png';
 
                 return (

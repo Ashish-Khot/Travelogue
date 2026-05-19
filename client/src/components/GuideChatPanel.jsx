@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import api from '../api';
+import { SOCKET_BASE_URL } from '../config/runtime';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
@@ -9,7 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import SendIcon from '@mui/icons-material/Send';
 import CircularProgress from '@mui/material/CircularProgress';
 
-const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = SOCKET_BASE_URL;
 
 export default function GuideChatPanel({ guideId }) {
   const [tourists, setTourists] = useState([]);

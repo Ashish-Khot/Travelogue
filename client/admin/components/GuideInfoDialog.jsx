@@ -1,10 +1,11 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Chip, Box, CircularProgress } from '@mui/material';
+import { toAbsoluteAssetUrl } from '../../src/config/runtime';
 
 const getUploadUrl = (path = '') => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
-  return `http://localhost:3001${path.startsWith('/') ? '' : '/'}${path}`;
+  return toAbsoluteAssetUrl(path);
 };
 
 const isImageProof = (path = '') => /\.(png|jpe?g|webp|gif)$/i.test(path.split('?')[0]);

@@ -51,6 +51,8 @@ const parseProviderSequence = () => {
   return dedupedOrderedProviders.length ? dedupedOrderedProviders : [...PROVIDER_PRIORITY];
 };
 
+const OPENROUTER_REFERER = (process.env.APP_PUBLIC_URL || process.env.FRONTEND_PUBLIC_URL || '').trim();
+
 const sanitizeHistory = (history) => {
   if (!Array.isArray(history)) return [];
   return history
@@ -200,7 +202,7 @@ const buildProviderCandidates = () => {
         url: `${API_CONFIG.OPENROUTER.BASE_URL}/chat/completions`,
         model: API_CONFIG.GUIDE_AI?.OPENROUTER_MODEL || API_CONFIG.OPENROUTER.MODEL,
         headers: {
-          'HTTP-Referer': process.env.APP_PUBLIC_URL || 'http://localhost:5173',
+          ...(OPENROUTER_REFERER ? { 'HTTP-Referer': OPENROUTER_REFERER } : {}),
           'X-Title': process.env.APP_NAME || 'Travel Virtual Guide',
         },
       });

@@ -1,3 +1,5 @@
+import { toAbsoluteAssetUrl } from '../config/runtime';
+
 /**
  * Build proper image URL for travelogue images
  * @param {string} imagePath - The image path from database
@@ -13,13 +15,7 @@ export const buildImageUrl = (imagePath) => {
     return imagePath;
   }
 
-  // If starts with /, prepend domain
-  if (imagePath.startsWith('/')) {
-    return `http://localhost:3001${imagePath}`;
-  }
-
-  // Otherwise, assume it's a relative path from root
-  return `http://localhost:3001/${imagePath}`;
+  return toAbsoluteAssetUrl(imagePath);
 };
 
 /**

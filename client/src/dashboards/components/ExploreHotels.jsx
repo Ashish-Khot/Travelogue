@@ -35,6 +35,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import api from '../../api';
 import { io } from 'socket.io-client';
 import { buildMediaUrl } from '../../utils/media';
+import { SOCKET_BASE_URL } from '../../config/runtime';
 
 const FALLBACK_IMAGE = '/no-image-fallback.png';
 
@@ -319,7 +320,7 @@ export default function ExploreHotels({ onOpenChat }) {
     fetchBookings();
     if (touristId) {
       if (!socketRef.current) {
-        socketRef.current = io('http://localhost:3001');
+        socketRef.current = io(SOCKET_BASE_URL);
       }
       const socket = socketRef.current;
       socket.emit('joinTouristRoom', { touristId });

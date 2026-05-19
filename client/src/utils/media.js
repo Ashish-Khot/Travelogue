@@ -1,7 +1,4 @@
-import api from '../api';
-
-const BACKEND_BASE_URL =
-  api.defaults?.baseURL?.replace(/\/api\/?$/, '') || 'http://localhost:3001';
+import { toAbsoluteAssetUrl } from '../config/runtime';
 
 const normalizeValue = (value) => {
   if (!value || typeof value !== 'string') return '';
@@ -11,14 +8,7 @@ const normalizeValue = (value) => {
 export const buildMediaUrl = (value) => {
   const normalized = normalizeValue(value);
   if (!normalized) return '';
-  if (normalized.startsWith('http') || normalized.startsWith('data:')) {
-    return normalized;
-  }
-  const safePath = normalized.replace(/\\/g, '/');
-  if (safePath.startsWith('/')) {
-    return `${BACKEND_BASE_URL}${safePath}`;
-  }
-  return `${BACKEND_BASE_URL}/${safePath}`;
+  return toAbsoluteAssetUrl(normalized);
 };
 
 export const getInitials = (name) => {
@@ -54,4 +44,3 @@ export const pickGradient = (seed) => {
   const hash = Math.abs(hashString(base));
   return gradients[hash % gradients.length];
 };
-

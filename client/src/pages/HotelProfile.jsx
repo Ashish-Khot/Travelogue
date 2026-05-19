@@ -25,6 +25,7 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import BadgeIcon from "@mui/icons-material/Badge";
 import BusinessIcon from "@mui/icons-material/Business";
 import api from "../api";
+import { toAbsoluteAssetUrl } from "../config/runtime";
 
 const hotelTypes = ["Resort", "Lodge", "Hostel", "Business hotel", "Guest house", "Apartment", "Homestay", "Other"];
 
@@ -37,8 +38,7 @@ const inputSx = {
 
 const getUploadUrl = (url) => {
   if (!url) return "";
-  if (url.startsWith("/uploads/")) return `http://localhost:3001${url}`;
-  return url;
+  return toAbsoluteAssetUrl(url);
 };
 
 const normalizeAmenities = (value) =>

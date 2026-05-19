@@ -31,18 +31,15 @@ import InterestsIcon from '@mui/icons-material/InterestsOutlined';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { toAbsoluteAssetUrl } from '../../config/runtime';
 
 const languageOptions = ['English', 'Hindi', 'Spanish', 'French', 'German', 'Chinese', 'Other'];
 const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
 export default function TouristProfileEdit({ user, onSave }) {
-
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
   const getAvatarUrl = (avatar) => {
     if (!avatar) return '';
-    if (avatar.startsWith('http')) return avatar;
-    return `${baseURL}${avatar}`;
+    return toAbsoluteAssetUrl(avatar);
   };
 
   const initialForm = {

@@ -6,6 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import api from '../../api';
 import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL } from '../../config/runtime';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -118,7 +119,7 @@ export default function MyBookings() {
         setLoading(false);
         // Setup socket connection for real-time updates
         if (!socket) {
-          socket = io('http://localhost:3001');
+          socket = io(SOCKET_BASE_URL);
           socket.emit('joinTouristRoom', { touristId: user._id });
           socket.on('bookingUpdate', (data) => {
             if (data && data.touristId === user._id) {

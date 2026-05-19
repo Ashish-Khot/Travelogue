@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../src/api';
+import { toAbsoluteAssetUrl } from '../../src/config/runtime';
 import {
   Box,
   Typography,
@@ -54,7 +55,7 @@ const cardSx = {
 const getUploadUrl = (path = '') => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
-  return `http://localhost:3001${path.startsWith('/') ? '' : '/'}${path}`;
+  return toAbsoluteAssetUrl(path);
 };
 
 export default function UserManagement() {

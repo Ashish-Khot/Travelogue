@@ -298,11 +298,9 @@ export default function TravelogueCard({ travelogue, onViewDetails, onRefresh })
           <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
             <Avatar
               src={
-                travelogue.userId?.avatar?.startsWith('http')
-                  ? travelogue.userId.avatar
-                  : travelogue.userId?.avatar
-                    ? `http://localhost:3001${travelogue.userId.avatar}`
-                    : '/default-avatar.png'
+                travelogue.userId?.avatar
+                  ? buildImageUrl(travelogue.userId.avatar)
+                  : '/default-avatar.png'
               }
               sx={{ width: 32, height: 32 }}
             />

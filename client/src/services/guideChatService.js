@@ -37,8 +37,7 @@ export const streamGuideAnswer = async ({
   }
 
   const token = localStorage.getItem('token');
-  const apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001').replace(/\/+$/, '');
-  const response = await fetch(`${apiBase}/api/guide/ask`, {
+  const response = await fetch(`${API_BASE_URL}/guide/ask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -84,3 +83,4 @@ export const streamGuideAnswer = async ({
     }
   }
 };
+import { API_BASE_URL } from '../config/runtime';

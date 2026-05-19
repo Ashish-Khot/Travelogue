@@ -25,6 +25,7 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { motion } from 'framer-motion';
 import api from '../../src/api';
+import { toAbsoluteAssetUrl } from '../../src/config/runtime';
 
 const cardSx = {
   borderRadius: '14px',
@@ -32,6 +33,12 @@ const cardSx = {
   border: '1px solid #e2e8f0',
   background: '#fff',
   boxShadow: '0 16px 32px rgba(15, 23, 42, 0.05)',
+};
+
+const getMediaUrl = (path = '') => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return toAbsoluteAssetUrl(path);
 };
 
 export default function TravelogueManagement() {
@@ -309,14 +316,14 @@ export default function TravelogueManagement() {
                       <Box sx={{ aspectRatio: '4/3', width: '100%', bgcolor: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {img.match(/\.(mp4|webm|ogg)$/i) ? (
                           <video
-                            src={img.startsWith('http') ? img : `http://localhost:3001/${img.replace(/^\/?/, '')}`}
+                            src={getMediaUrl(img)}
                             controls
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
                           <Box
                             component="img"
-                            src={img.startsWith('http') ? img : `http://localhost:3001/${img.replace(/^\/?/, '')}`}
+                            src={getMediaUrl(img)}
                             alt="media"
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {

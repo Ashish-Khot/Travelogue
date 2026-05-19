@@ -29,6 +29,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { io } from "socket.io-client";
 import api from "../api";
+import { SOCKET_BASE_URL, toAbsoluteAssetUrl } from "../config/runtime";
 
 const listItemStyle = {
   p: 1.5,
@@ -185,7 +186,7 @@ export default function HotelChat({ showHeader = true }) {
 
   useEffect(() => {
     if (!userId) return;
-    const socket = io("http://localhost:3001", { transports: ["websocket"] });
+    const socket = io(SOCKET_BASE_URL, { transports: ["websocket"] });
     socketRef.current = socket;
 
     socket.on("newMessage", (msg) => {
@@ -691,13 +692,7 @@ export default function HotelChat({ showHeader = true }) {
                   <Box sx={{ position: "relative" }}>
                     <Avatar
                       sx={{ bgcolor: "#e4f2ec", color: "#1b3c32" }}
-                      src={
-                        tourist.avatar
-                          ? tourist.avatar.startsWith("http")
-                            ? tourist.avatar
-                          : `http://localhost:3001${tourist.avatar}`
-                          : undefined
-                      }
+                      src={tourist.avatar ? toAbsoluteAssetUrl(tourist.avatar) : undefined}
                     >
                       {tourist.name
                         .split(" ")
@@ -871,9 +866,7 @@ export default function HotelChat({ showHeader = true }) {
                 ? "Delete for everyone (available for 1 hour)"
                 : "Delete for me (delete for everyone is only available for your messages within 1 hour)";
               const attachmentUrl = message.attachmentUrl
-                ? message.attachmentUrl.startsWith("http")
-                  ? message.attachmentUrl
-                  : `http://localhost:3001${message.attachmentUrl}`
+                ? toAbsoluteAssetUrl(message.attachmentUrl)
                 : "";
               return (
                 <Box

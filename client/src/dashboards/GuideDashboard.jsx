@@ -438,6 +438,7 @@ function ReviewsPage({ user, guideProfile }) {
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 import { io } from 'socket.io-client';
+import { SOCKET_BASE_URL, toAbsoluteAssetUrl } from '../config/runtime';
 import { useNavigate } from 'react-router-dom';
 import { styled, ThemeProvider, createTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -1508,7 +1509,7 @@ export default function GuideDashboard() {
 
     // Setup socket connection for real-time booking updates
     if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3001');
+      socketRef.current = io(SOCKET_BASE_URL);
     }
     const socket = socketRef.current;
     
@@ -1750,7 +1751,7 @@ export default function GuideDashboard() {
     };
     const fieldLabelSx = { fontWeight: 700, mb: 0.75, color: '#1f2937' };
     const avatarSrc = avatarPreview
-      ? (avatarPreview.startsWith('http') ? avatarPreview : `http://localhost:3001${avatarPreview}`)
+      ? toAbsoluteAssetUrl(avatarPreview)
       : '/avatar.png';
 
     return (

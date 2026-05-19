@@ -33,6 +33,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import api from "../api";
 import { io } from "socket.io-client";
+import { SOCKET_BASE_URL } from "../config/runtime";
 
 const STATUS_ALL = "All";
 const STATUS_AVAILABLE = "Available";
@@ -165,7 +166,7 @@ export default function RoomManagement({ showHeader = true }) {
 
   useEffect(() => {
     if (!userId) return undefined;
-    const socket = io("http://localhost:3001");
+    const socket = io(SOCKET_BASE_URL);
     socket.emit("joinHotelRoom", { hotelId: userId });
     const handleRoomUpdate = (payload) => {
       if (!payload || payload.hotelId !== userId) return;

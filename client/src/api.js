@@ -1,20 +1,8 @@
 import axios from "axios";
-
-const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
-
-function normalizeApiBaseUrl(value) {
-  if (!value) return "http://localhost:3001/api";
-
-  const withoutTrailingSlash = value.replace(/\/+$/, "");
-  if (/\/api$/i.test(withoutTrailingSlash)) {
-    return withoutTrailingSlash;
-  }
-
-  return `${withoutTrailingSlash}/api`;
-}
+import { API_BASE_URL } from "./config/runtime";
 
 const api = axios.create({
-  baseURL: normalizeApiBaseUrl(rawBaseUrl),
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

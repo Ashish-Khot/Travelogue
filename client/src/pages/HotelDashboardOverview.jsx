@@ -29,6 +29,7 @@ import StarIcon from "@mui/icons-material/Star";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { io } from "socket.io-client";
+import { SOCKET_BASE_URL } from "../config/runtime";
 
 const cardStyle = {
   p: { xs: 2, md: 2.25 },
@@ -109,7 +110,7 @@ export default function HotelDashboardOverview({ showHeader = true, onQuickActio
     if (!userId) return;
     fetchOverview();
     const intervalId = setInterval(fetchOverview, 30000);
-    const socket = io("http://localhost:3001");
+    const socket = io(SOCKET_BASE_URL);
     socket.emit("joinHotelRoom", { hotelId: userId });
     socket.on("hotelMessageUpdate", fetchOverview);
     socket.on("hotelReviewUpdate", fetchOverview);

@@ -552,11 +552,9 @@ export default function TravelogueDetailView({ travelogueId, travelogue: initial
           <Stack direction="row" spacing={2} alignItems="center" mb={4} sx={{ p: 2, bgcolor: 'rgba(79,138,139,0.03)', borderRadius: '12px' }}>
             <Avatar
               src={
-                travelogue.userId?.avatar?.startsWith('http')
-                  ? travelogue.userId.avatar
-                  : travelogue.userId?.avatar
-                    ? `http://localhost:3001${travelogue.userId.avatar}`
-                    : '/default-avatar.png'
+                travelogue.userId?.avatar
+                  ? buildImageUrl(travelogue.userId.avatar)
+                  : '/default-avatar.png'
               }
               sx={{ width: 56, height: 56 }}
             />
