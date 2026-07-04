@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "./api";
 
@@ -95,6 +95,10 @@ export default function Register() {
     severity: "info",
     message: "",
   });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -321,8 +325,7 @@ export default function Register() {
               value={selectedRole}
               exclusive
               onChange={handleRole}
-              className={styles.roleGroup}
-              sx={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+              className={`${styles.roleGroup} ${styles.registerRoleGroup}`}
             >
               {roles.map((role) => (
                 <ToggleButton

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "./api";
 import Snackbar from "@mui/material/Snackbar";
@@ -61,6 +61,10 @@ export default function Login() {
     severity: "info",
     message: "",
   });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleRole = (event, newRole) => {
     if (newRole !== null) setSelectedRole(newRole);
@@ -240,7 +244,6 @@ export default function Login() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                autoFocus
                 value={form.email}
                 onChange={handleChange}
                 className={styles.formField}
